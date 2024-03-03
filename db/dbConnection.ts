@@ -1,9 +1,9 @@
 import { Pool } from "pg";
 
 export const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
+  user: "admin",
+  host: "cl845053-001.eu.clouddb.ovh.net",
   database: "android-game-db",
-  password: "root",
-  port: 5432,
+  password: "TGw4yPrG",
+  port: 35954,
 });
