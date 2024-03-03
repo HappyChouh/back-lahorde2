@@ -1,0 +1,571 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model actioneffecttype {
+  id                        Int                         @id @default(autoincrement())
+  name                      String?                     @db.VarChar(50)
+  actionlog                 actionlog[]
+  effecthasactioneffecttype effecthasactioneffecttype[]
+}
+
+model actionlog {
+  id                     Int                      @id @default(autoincrement())
+  turn_number            Int?
+  detection_prerequisite Int?
+  id_action_effect_type  Int?
+  id_ia_creature         Int?
+  id_player_creature     Int?
+  id_journal             Int
+  actioneffecttype       actioneffecttype?        @relation(fields: [id_action_effect_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  iacreature             iacreature?              @relation(fields: [id_ia_creature], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  journal                journal                  @relation(fields: [id_journal], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  playercreature         playercreature?          @relation(fields: [id_player_creature], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  iacreatureimpacted     iacreatureimpacted[]
+  playercreatureimpacted playercreatureimpacted[]
+}
+
+model effect {
+  id                        Int                         @id @default(autoincrement())
+  name                      String?                     @db.VarChar(50)
+  effect_value              Decimal?                    @db.Decimal(15, 2)
+  effecthasactioneffecttype effecthasactioneffecttype[]
+  effectprerequisite        effectprerequisite[]
+  effectrequired            effectrequired[]
+  eventhaseffect            eventhaseffect[]
+  evolvehaseffect           evolvehaseffect[]
+  facilityhaseffect         facilityhaseffect[]
+  statehaseffect            statehaseffect[]
+}
+
+model effecthasactioneffecttype {
+  id_action_effect_type Int
+  id_effect             Int
+  actioneffecttype      actioneffecttype @relation(fields: [id_action_effect_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  effect                effect           @relation(fields: [id_effect], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_action_effect_type, id_effect])
+}
+
+model effectprerequisite {
+  id_effect                   Int
+  id_prerequisite_for_element Int
+  effect                      effect                 @relation(fields: [id_effect], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_effect, id_prerequisite_for_element])
+}
+
+model effectrequired {
+  id_effect                   Int
+  id_prerequisite_for_element Int
+  effect                      effect                 @relation(fields: [id_effect], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_effect, id_prerequisite_for_element])
+}
+
+model environment {
+  id            Int            @id @default(autoincrement())
+  id_game       Int            @unique
+  game          game           @relation(fields: [id_game], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  iacreature    iacreature[]
+  multiplicator multiplicator?
+}
+
+model event {
+  id                Int                 @id @default(autoincrement())
+  name              String?             @db.VarChar(50)
+  description       String?             @db.VarChar(250)
+  probability       Decimal?            @db.Decimal(15, 2)
+  eventhaseffect    eventhaseffect[]
+  eventprerequisite eventprerequisite[]
+  eventrequired     eventrequired[]
+}
+
+model eventhaseffect {
+  id_effect Int
+  id_event  Int
+  effect    effect @relation(fields: [id_effect], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  event     event  @relation(fields: [id_event], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_effect, id_event])
+}
+
+model eventprerequisite {
+  id_event                    Int
+  id_prerequisite_for_element Int
+  event                       event                  @relation(fields: [id_event], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_event, id_prerequisite_for_element])
+}
+
+model eventrequired {
+  id_event                    Int
+  id_prerequisite_for_element Int
+  event                       event                  @relation(fields: [id_event], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_event, id_prerequisite_for_element])
+}
+
+model evolve {
+  id                               Int                                @id @default(autoincrement())
+  name                             String?                            @db.VarChar(50)
+  evolvehaseffect                  evolvehaseffect[]
+  evolvehaslootchancemultiplicator evolvehaslootchancemultiplicator[]
+  evolveprerequisite               evolveprerequisite[]
+  evolverequired                   evolverequired[]
+  evolveslot                       evolveslot[]
+}
+
+model evolvehaseffect {
+  id_effect Int
+  id_evolve Int
+  effect    effect @relation(fields: [id_effect], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  evolve    evolve @relation(fields: [id_evolve], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_effect, id_evolve])
+}
+
+model evolvehaslootchancemultiplicator {
+  id_evolve                           Int
+  id_evolve_loot_chance_multiplicator Int
+  evolvelootchancemultiplicator       evolvelootchancemultiplicator @relation(fields: [id_evolve_loot_chance_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "evolvehaslootchancemultiplica_id_evolve_loot_chance_multip_fkey")
+  evolve                              evolve                        @relation(fields: [id_evolve], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_evolve, id_evolve_loot_chance_multiplicator])
+}
+
+model evolvelootchancemultiplicator {
+  id                                            Int                                             @id @default(autoincrement())
+  multiplicator_value                           Decimal?                                        @db.Decimal(15, 2)
+  evolvehaslootchancemultiplicator              evolvehaslootchancemultiplicator[]
+  multiplicatorhasevolvelootchancemultiplicator multiplicatorhasevolvelootchancemultiplicator[]
+}
+
+model evolveprerequisite {
+  id_evolve                   Int
+  id_prerequisite_for_element Int
+  evolve                      evolve                 @relation(fields: [id_evolve], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_evolve, id_prerequisite_for_element])
+}
+
+model evolverequired {
+  id_evolve                   Int
+  id_prerequisite_for_element Int
+  evolve                      evolve                 @relation(fields: [id_evolve], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_evolve, id_prerequisite_for_element])
+}
+
+model evolveslot {
+  id                                Int                                 @id @default(autoincrement())
+  id_evolve                         Int
+  evolve                            evolve                              @relation(fields: [id_evolve], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  playercreatureevolvehasevolveslot playercreatureevolvehasevolveslot[]
+}
+
+model facility {
+  id                                 Int                                  @id @default(autoincrement())
+  name                               String?                              @db.VarChar(50)
+  facilityhaseffect                  facilityhaseffect[]
+  facilityhaslootchancemultiplicator facilityhaslootchancemultiplicator[]
+  facilityprerequisite               facilityprerequisite[]
+  facilityrequired                   facilityrequired[]
+}
+
+model facilityhaseffect {
+  id_effect   Int
+  id_facility Int
+  effect      effect   @relation(fields: [id_effect], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  facility    facility @relation(fields: [id_facility], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_effect, id_facility])
+}
+
+model facilityhaslootchancemultiplicator {
+  id_facility                           Int
+  id_facility_loot_chance_multiplicator Int
+  facilitylootchancemultiplicator       facilitylootchancemultiplicator @relation(fields: [id_facility_loot_chance_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "facilityhaslootchancemultipli_id_facility_loot_chance_mult_fkey")
+  facility                              facility                        @relation(fields: [id_facility], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_facility, id_facility_loot_chance_multiplicator])
+}
+
+model facilitylootchancemultiplicator {
+  id                                              Int                                               @id @default(autoincrement())
+  multiplicator_value                             Decimal?                                          @db.Decimal(15, 2)
+  facilityhaslootchancemultiplicator              facilityhaslootchancemultiplicator[]
+  multiplicatorhasfacilitylootchancemultiplicator multiplicatorhasfacilitylootchancemultiplicator[]
+}
+
+model facilityprerequisite {
+  id_facility                 Int
+  id_prerequisite_for_element Int
+  facility                    facility               @relation(fields: [id_facility], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_facility, id_prerequisite_for_element])
+}
+
+model facilityrequired {
+  id_facility                 Int
+  id_prerequisite_for_element Int
+  facility                    facility               @relation(fields: [id_facility], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_facility, id_prerequisite_for_element])
+}
+
+model game {
+  id             Int              @id @default(autoincrement())
+  name           String?          @db.VarChar(50)
+  environment    environment?
+  playercreature playercreature[]
+}
+
+model iacreature {
+  id                 Int                  @id @default(autoincrement())
+  name               String?              @db.VarChar(50)
+  detection_level    Int?
+  threat_level       Int?
+  hide_level         Int?
+  loot               String?              @db.VarChar(50)
+  is_dead_           Boolean?             @map("is_dead?")
+  id_environment     Int
+  actionlog          actionlog[]
+  environment        environment          @relation(fields: [id_environment], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  iacreatureimpacted iacreatureimpacted[]
+}
+
+model iacreatureimpacted {
+  id_ia_creature Int
+  id_action_log  Int
+  actionlog      actionlog  @relation(fields: [id_action_log], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  iacreature     iacreature @relation(fields: [id_ia_creature], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_ia_creature, id_action_log])
+}
+
+model journal {
+  id        Int         @id @default(autoincrement())
+  actionlog actionlog[]
+}
+
+model material {
+  id                                 Int                                  @id @default(autoincrement())
+  name                               String?                              @db.VarChar(50)
+  id_material_rarity                 Int
+  materialrarity                     materialrarity                       @relation(fields: [id_material_rarity], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  materialhaslootchancemultiplicator materialhaslootchancemultiplicator[]
+  materialprerequisite               materialprerequisite[]
+  materialslot                       materialslot[]
+}
+
+model materialcost {
+  id_material_slot            Int
+  id_prerequisite_for_element Int
+  materialslot                materialslot           @relation(fields: [id_material_slot], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_material_slot, id_prerequisite_for_element])
+}
+
+model materialhaslootchancemultiplicator {
+  id_material                           Int
+  id_material_loot_chance_multiplicator Int
+  materiallootchancemultiplicator       materiallootchancemultiplicator @relation(fields: [id_material_loot_chance_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "materialhaslootchancemultipli_id_material_loot_chance_mult_fkey")
+  material                              material                        @relation(fields: [id_material], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_material, id_material_loot_chance_multiplicator])
+}
+
+model materiallootchancemultiplicator {
+  id                                              Int                                               @id @default(autoincrement())
+  multiplicator_value                             Decimal?                                          @db.Decimal(15, 2)
+  materialhaslootchancemultiplicator              materialhaslootchancemultiplicator[]
+  multiplicatorhasmateriallootchancemultiplicator multiplicatorhasmateriallootchancemultiplicator[]
+}
+
+model materialprerequisite {
+  id_material                 Int
+  id_prerequisite_for_element Int
+  material                    material               @relation(fields: [id_material], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_material, id_prerequisite_for_element])
+}
+
+model materialrarity {
+  id       Int        @id @default(autoincrement())
+  name     String?    @db.VarChar(50)
+  material material[]
+}
+
+model materialslot {
+  id                                    Int                                     @id @default(autoincrement())
+  quantity                              Int?
+  id_material                           Int
+  materialcost                          materialcost[]
+  material                              material                                @relation(fields: [id_material], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  playercreaturematerialhasmaterialslot playercreaturematerialhasmaterialslot[]
+}
+
+model multiplicator {
+  id                                              Int                                               @id @default(autoincrement())
+  water_level_multiplicator                       Decimal?                                          @db.Decimal(15, 2)
+  nutrients_level_multiplicator                   Decimal?                                          @db.Decimal(15, 2)
+  id_environment                                  Int?                                              @unique
+  environment                                     environment?                                      @relation(fields: [id_environment], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  multiplicatorhasevolvelootchancemultiplicator   multiplicatorhasevolvelootchancemultiplicator[]
+  multiplicatorhasfacilitylootchancemultiplicator multiplicatorhasfacilitylootchancemultiplicator[]
+  multiplicatorhasmateriallootchancemultiplicator multiplicatorhasmateriallootchancemultiplicator[]
+  multiplicatorhasstatelootchancemultiplicator    multiplicatorhasstatelootchancemultiplicator[]
+  playercreature                                  playercreature?
+}
+
+model multiplicatorhasevolvelootchancemultiplicator {
+  id_evolve_loot_chance_multiplicator Int
+  id_multiplicator                    Int
+  evolvelootchancemultiplicator       evolvelootchancemultiplicator @relation(fields: [id_evolve_loot_chance_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "multiplicatorhasevolvelootcha_id_evolve_loot_chance_multip_fkey")
+  multiplicator                       multiplicator                 @relation(fields: [id_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "multiplicatorhasevolvelootchancemultiplic_id_multiplicator_fkey")
+
+  @@id([id_evolve_loot_chance_multiplicator, id_multiplicator])
+}
+
+model multiplicatorhasfacilitylootchancemultiplicator {
+  id_facility_loot_chance_multiplicator Int
+  id_multiplicator                      Int
+  facilitylootchancemultiplicator       facilitylootchancemultiplicator @relation(fields: [id_facility_loot_chance_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "multiplicatorhasfacilitylootc_id_facility_loot_chance_mult_fkey")
+  multiplicator                         multiplicator                   @relation(fields: [id_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "multiplicatorhasfacilitylootchancemultipl_id_multiplicator_fkey")
+
+  @@id([id_facility_loot_chance_multiplicator, id_multiplicator])
+}
+
+model multiplicatorhasmateriallootchancemultiplicator {
+  id_material_loot_chance_multiplicator Int
+  id_multiplicator                      Int
+  materiallootchancemultiplicator       materiallootchancemultiplicator @relation(fields: [id_material_loot_chance_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "multiplicatorhasmateriallootc_id_material_loot_chance_mult_fkey")
+  multiplicator                         multiplicator                   @relation(fields: [id_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "multiplicatorhasmateriallootchancemultipl_id_multiplicator_fkey")
+
+  @@id([id_material_loot_chance_multiplicator, id_multiplicator])
+}
+
+model multiplicatorhasstatelootchancemultiplicator {
+  id_state_loot_chance_multiplicator Int
+  id_multiplicator                   Int
+  statelootchancemultiplicator       statelootchancemultiplicator @relation(fields: [id_state_loot_chance_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "multiplicatorhasstatelootchan_id_state_loot_chance_multipl_fkey")
+  multiplicator                      multiplicator                @relation(fields: [id_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "multiplicatorhasstatelootchancemultiplica_id_multiplicator_fkey")
+
+  @@id([id_state_loot_chance_multiplicator, id_multiplicator])
+}
+
+model playercreature {
+  id                      Int                      @id @default(autoincrement())
+  detection_level         Int?
+  threat_level            Int?
+  hide_level              Int?
+  current_action_point    Int?
+  total_action_point      Int?
+  evolution_point         Int?
+  total_evolution_point   Int?
+  survivability           Decimal?                 @db.Decimal(15, 2)
+  water_level             Int?
+  nutrients_level         Int?
+  is_dead_                Boolean?                 @map("is_dead?")
+  id_user_account         Int?
+  id_game                 Int
+  id_multiplicator        Int?                     @unique
+  id_player_creature_type Int?
+  actionlog               actionlog[]
+  game                    game                     @relation(fields: [id_game], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  multiplicator           multiplicator?           @relation(fields: [id_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  playercreaturetype      playercreaturetype?      @relation(fields: [id_player_creature_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  useraccount             useraccount?             @relation(fields: [id_user_account], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  playercreatureevolve    playercreatureevolve?
+  playercreatureimpacted  playercreatureimpacted[]
+  playercreaturematerial  playercreaturematerial?
+  playercreaturestate     playercreaturestate?
+  playersurvivability     playersurvivability?
+}
+
+model playercreatureevolve {
+  id                                Int                                 @id
+  id_player_creature                Int                                 @unique
+  playercreature                    playercreature                      @relation(fields: [id_player_creature], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  playercreatureevolvehasevolveslot playercreatureevolvehasevolveslot[]
+}
+
+model playercreatureevolvehasevolveslot {
+  id_player_creature_evolve Int
+  id_evolve_slot            Int
+  playercreatureevolve      playercreatureevolve @relation(fields: [id_player_creature_evolve], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "playercreatureevolvehasevolveslo_id_player_creature_evolve_fkey")
+  evolveslot                evolveslot           @relation(fields: [id_evolve_slot], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_player_creature_evolve, id_evolve_slot])
+}
+
+model playercreatureimpacted {
+  id_player_creature Int
+  id_action_log      Int
+  actionlog          actionlog      @relation(fields: [id_action_log], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  playercreature     playercreature @relation(fields: [id_player_creature], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_player_creature, id_action_log])
+}
+
+model playercreaturematerial {
+  id                                    Int                                     @id @default(autoincrement())
+  id_player_creature                    Int                                     @unique
+  playercreature                        playercreature                          @relation(fields: [id_player_creature], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  playercreaturematerialhasmaterialslot playercreaturematerialhasmaterialslot[]
+}
+
+model playercreaturematerialhasmaterialslot {
+  id_material_slot            Int
+  id_player_creature_material Int
+  playercreaturematerial      playercreaturematerial @relation(fields: [id_player_creature_material], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "playercreaturematerialhasmater_id_player_creature_material_fkey")
+  materialslot                materialslot           @relation(fields: [id_material_slot], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_material_slot, id_player_creature_material])
+}
+
+model playercreaturestate {
+  id                              Int                               @id @default(autoincrement())
+  id_player_creature              Int                               @unique
+  playercreature                  playercreature                    @relation(fields: [id_player_creature], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  playercreaturestatehasstateslot playercreaturestatehasstateslot[]
+}
+
+model playercreaturestatehasstateslot {
+  id_state_slot            Int
+  id_player_creature_state Int
+  playercreaturestate      playercreaturestate @relation(fields: [id_player_creature_state], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  stateslot                stateslot           @relation(fields: [id_state_slot], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_state_slot, id_player_creature_state])
+}
+
+model playercreaturetype {
+  id             Int              @id @default(autoincrement())
+  name           String?          @db.VarChar(50)
+  playercreature playercreature[]
+}
+
+model playersurvivability {
+  id                            Int            @id @default(autoincrement())
+  water_level_survivability     Decimal?       @db.Decimal(15, 2)
+  nutrients_level_survivability Decimal?       @db.Decimal(15, 2)
+  state_survivability           Decimal?       @db.Decimal(15, 2)
+  evolve_survivability          Decimal?       @db.Decimal(15, 2)
+  refuge_survivability          Decimal?       @db.Decimal(15, 2)
+  environment_survivability     Decimal?       @db.Decimal(15, 2)
+  id_player_creature            Int            @unique
+  playercreature                playercreature @relation(fields: [id_player_creature], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model state {
+  id                              Int                               @id @default(autoincrement())
+  name                            String?                           @db.VarChar(50)
+  turn_duration                   Int?
+  statehaseffect                  statehaseffect[]
+  statehaslootchancemultiplicator statehaslootchancemultiplicator[]
+  stateprerequisite               stateprerequisite[]
+  staterequired                   staterequired[]
+  stateslot                       stateslot[]
+}
+
+model statehaseffect {
+  id_effect Int
+  id_state  Int
+  effect    effect @relation(fields: [id_effect], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  state     state  @relation(fields: [id_state], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_effect, id_state])
+}
+
+model statehaslootchancemultiplicator {
+  id_state                           Int
+  id_state_loot_chance_multiplicator Int
+  statelootchancemultiplicator       statelootchancemultiplicator @relation(fields: [id_state_loot_chance_multiplicator], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "statehaslootchancemultiplicat_id_state_loot_chance_multipl_fkey")
+  state                              state                        @relation(fields: [id_state], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_state, id_state_loot_chance_multiplicator])
+}
+
+model statelootchancemultiplicator {
+  id                                           Int                                            @id @default(autoincrement())
+  multiplicator_value                          Decimal?                                       @db.Decimal(15, 2)
+  multiplicatorhasstatelootchancemultiplicator multiplicatorhasstatelootchancemultiplicator[]
+  statehaslootchancemultiplicator              statehaslootchancemultiplicator[]
+}
+
+model stateprerequisite {
+  id_state                    Int
+  id_prerequisite_for_element Int
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  state                       state                  @relation(fields: [id_state], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_state, id_prerequisite_for_element])
+}
+
+model staterequired {
+  id_state                    Int
+  id_prerequisite_for_element Int
+  prerequisiteforelement      prerequisiteforelement @relation(fields: [id_prerequisite_for_element], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  state                       state                  @relation(fields: [id_state], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_state, id_prerequisite_for_element])
+}
+
+model stateslot {
+  id                              Int                               @id @default(autoincrement())
+  turn_number                     Int?
+  id_state                        Int
+  playercreaturestatehasstateslot playercreaturestatehasstateslot[]
+  state                           state                             @relation(fields: [id_state], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model useraccount {
+  id              Int              @id @default(autoincrement())
+  username        String?          @db.VarChar(50)
+  email           String?          @db.VarChar(50)
+  playercreature  playercreature[]
+  userinformation userinformation?
+}
+
+model userinformation {
+  id              Int         @id @default(autoincrement())
+  nbgameplayed    Int?
+  maxdaysurvived  Int?
+  id_user_account Int         @unique
+  useraccount     useraccount @relation(fields: [id_user_account], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model prerequisiteforelement {
+  id                           Int                    @id @default(autoincrement())
+  total_evolution_prerequisite Int?
+  evolution_cost               Int?
+  effectprerequisite           effectprerequisite[]
+  effectrequired               effectrequired[]
+  eventprerequisite            eventprerequisite[]
+  eventrequired                eventrequired[]
+  evolveprerequisite           evolveprerequisite[]
+  evolverequired               evolverequired[]
+  facilityprerequisite         facilityprerequisite[]
+  facilityrequired             facilityrequired[]
+  materialcost                 materialcost[]
+  materialprerequisite         materialprerequisite[]
+  stateprerequisite            stateprerequisite[]
+  staterequired                staterequired[]
+}
